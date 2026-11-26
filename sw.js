@@ -1,5 +1,5 @@
-// Offline support: cache the app shell, serve cache-first.
-const CACHE = 'independent-steps-v2';
+// Offline support: cache the app shell and photos for use without a connection.
+const CACHE = 'independent-steps-v3';
 const PHOTOS = ["images/laundry-1.jpg", "images/laundry-2.jpg", "images/laundry-3.jpg", "images/laundry-4.jpg", "images/laundry-5.jpg", "images/laundry-6.jpg", "images/laundry-7.jpg", "images/laundry-8.jpg", "images/laundry-9.jpg", "images/dishes-1.jpg", "images/dishes-2.jpg", "images/dishes-3.jpg", "images/dishes-4.jpg", "images/dishes-5.jpg", "images/dishes-6.jpg", "images/dishes-7.jpg", "images/dishes-8.jpg", "images/dishes-9.jpg", "images/bed-1.jpg", "images/bed-2.jpg", "images/bed-3.jpg", "images/bed-4.jpg", "images/bed-5.jpg", "images/pet-1.jpg", "images/pet-3.jpg", "images/pet-4.jpg", "images/pet-5.jpg"];
 const SHELL = ['./', 'index.html', 'styles.css', 'credits.js', 'app.js', 'manifest.webmanifest', 'icon.svg', ...PHOTOS];
 
@@ -15,14 +15,17 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
+// Network first, so updates show up right away; the cache is only used offline.
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
   e.respondWith(
-    caches.match(e.request).then((hit) => hit || fetch(e.request).then((res) => {
-      const copy = res.clone();
-      caches.open(CACHE).then((c) => c.put(e.request, copy));
+    fetch(e.request).then((res) => {
+      if (res.ok) {
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put(e.request, copy));
+      }
       return res;
-    }).catch(() => caches.match('index.html')))
+    }).catch(() => caches.match(e.request).then((hit) => hit || caches.match('index.html')))
   );
 });
 
