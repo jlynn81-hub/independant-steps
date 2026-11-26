@@ -106,12 +106,29 @@ function migratePhotos(s) {
 }
 
 function defaultState() {
+  const chores = starterChores();
   return {
-    chores: starterChores(),
+    chores,
     photosAdded: PHOTOS_VERSION,
     settings: { readAloud: false, pin: '' },
-    completions: {}, // choreId -> 'YYYY-MM-DD'
+    completions: {}, // choreId -> 'YYYY-MM-DD' (last day it was finished)
+    history: [], // [{ choreId, date }] every finished chore, for the weekly summary
+    schedule: starterSchedule(chores), // the daily First / Then plan
+    planDone: {}, // 'YYYY-MM-DD' -> [schedule item ids] for activities ticked off that day
   };
+}
+
+function planChore(chore) { return { id: uid(), type: 'chore', choreId: chore.id }; }
+function planActivity(emoji, text) { return { id: uid(), type: 'activity', emoji, text }; }
+// A sample morning routine so the First / Then board isn't empty on day one.
+function starterSchedule(chores) {
+  const byTitle = (t) => chores.find((c) => c.title === t);
+  return [
+    byTitle('Make the bed') && planChore(byTitle('Make the bed')),
+    planActivity('🥣', 'Eat breakfast'),
+    byTitle('Feed the pet') && planChore(byTitle('Feed the pet')),
+    planActivity('🎮', 'Free time'),
+  ].filter(Boolean);
 }
 
 /* ---------- Storage ---------- */
@@ -124,7 +141,12 @@ function load() {
       if (s && Array.isArray(s.chores)) {
         s.settings = Object.assign({ readAloud: false, pin: '' }, s.settings);
         s.completions = s.completions || {};
-        if (!(s.photosAdded >= PHOTOS_VERSION)) { migratePhotos(s); localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+        if (!(s.photosAdded >= PHOTOS_VERSION)) migratePhotos(s);
+        // Data saved before the daily plan and weekly summary existed.
+        if (!Array.isArray(s.history)) s.history = Object.entries(s.completions).map(([choreId, date]) => ({ choreId, date }));
+        if (!Array.isArray(s.schedule)) s.schedule = starterSchedule(s.chores);
+        s.planDone = s.planDone || {};
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
         return s;
       }
     }
@@ -156,6 +178,8 @@ function route() {
   const [view, id] = parts;
   if ((view === 'care' || view === 'edit') && !caregiverUnlocked) { location.hash = '#/'; return; }
   if (view === 'chore' && findChore(id)) return renderPlayer(findChore(id));
+  if (view === 'plan') return renderPlan();
+  if (view === 'week') return renderWeek();
   if (view === 'care') return renderCaregiver();
   if (view === 'edit') return renderEditor(id);
   renderHome();
@@ -172,13 +196,18 @@ function renderHome() {
     <div class="topbar">
       <div>
         <h1>${greet} 👋</h1>
-        <p class="muted">Pick a chore to start.</p>
       </div>
       <span class="spacer"></span>
       <button class="hold icon-btn" id="care-btn" aria-label="Grown-ups: press and hold to open settings" title="Grown-ups: press and hold">
         <span class="fill"></span>⚙️
       </button>
     </div>
+    ${firstThenHtml()}
+    <div class="row home-links">
+      ${planItems().length ? '<button id="plan-btn">📋 Today’s plan</button>' : ''}
+      <button id="week-btn">⭐ My week</button>
+    </div>
+    <h2>All chores</h2>
     ${state.chores.length ? '' : '<p class="muted">No chores yet. A grown-up can add some in settings.</p>'}
     <ul class="chore-list">
       ${state.chores.map((c) => {
@@ -197,6 +226,136 @@ function renderHome() {
   app.querySelectorAll('.chore-card').forEach((b) =>
     b.addEventListener('click', () => go(`#/chore/${b.dataset.id}`)));
   setupHold(document.getElementById('care-btn'), openCaregiver);
+  const planBtn = document.getElementById('plan-btn');
+  if (planBtn) planBtn.onclick = () => go('#/plan');
+  document.getElementById('week-btn').onclick = () => go('#/week');
+  const ftGo = document.getElementById('ft-go');
+  if (ftGo) ftGo.onclick = () => startPlanItem(ftGo.dataset.id);
+}
+
+/* ---------- Daily plan (First / Then) ---------- */
+// Plan items whose chore still exists, with today's done state.
+function planItems() {
+  const today = todayKey();
+  const ticked = state.planDone[today] || [];
+  return state.schedule.map((it) => {
+    if (it.type === 'chore') {
+      const c = findChore(it.choreId);
+      if (!c) return null;
+      const photo = (c.steps.find((st) => st.image) || {}).image || '';
+      return { ...it, title: c.title, emoji: c.emoji, photo, done: state.completions[c.id] === today };
+    }
+    return { ...it, title: it.text, photo: '', done: ticked.includes(it.id) };
+  }).filter(Boolean);
+}
+function nextPlanItems() {
+  const items = planItems();
+  const i = items.findIndex((it) => !it.done);
+  return i < 0 ? [] : items.slice(i, i + 2);
+}
+function planVisual(it, cls = '') {
+  return it.photo
+    ? `<img class="${cls}" src="${esc(it.photo)}" alt="">`
+    : `<span class="${cls} plan-emoji" aria-hidden="true">${esc(it.emoji || '✅')}</span>`;
+}
+function firstThenHtml() {
+  const items = planItems();
+  if (!items.length) return '';
+  const [first, then] = nextPlanItems();
+  if (!first) {
+    return `<section class="first-then all-done"><span class="plan-emoji" aria-hidden="true">🌟</span>
+      <div><strong>Your plan is all done for today!</strong><br><span class="muted">Great job.</span></div></section>`;
+  }
+  return `<section class="first-then" aria-label="First, then">
+    <div class="ft-card ft-first">
+      <div class="ft-label">First</div>
+      <div class="ft-visual">${planVisual(first)}</div>
+      <div class="ft-title">${esc(first.emoji)} ${esc(first.title)}</div>
+      <button class="btn-primary" id="ft-go" data-id="${esc(first.id)}">${first.type === 'chore' ? '▶ Start' : '✓ I did it'}</button>
+    </div>
+    <div class="ft-arrow" aria-hidden="true">➜</div>
+    <div class="ft-card ft-then">
+      <div class="ft-label">Then</div>
+      ${then
+        ? `<div class="ft-visual">${planVisual(then)}</div><div class="ft-title">${esc(then.emoji)} ${esc(then.title)}</div>`
+        : '<div class="ft-visual"><span class="plan-emoji" aria-hidden="true">🌟</span></div><div class="ft-title">All done!</div>'}
+    </div>
+  </section>`;
+}
+function startPlanItem(id) {
+  const it = planItems().find((x) => x.id === id);
+  if (!it) return;
+  if (it.type === 'chore') { go(`#/chore/${it.choreId}`); return; }
+  togglePlanActivity(id);
+  route();
+}
+function togglePlanActivity(id) {
+  const today = todayKey();
+  const list = state.planDone[today] || [];
+  state.planDone = { [today]: list.includes(id) ? list.filter((x) => x !== id) : [...list, id] }; // keep only today
+  save();
+}
+
+function renderPlan() {
+  const items = planItems();
+  const current = items.find((it) => !it.done);
+  app.innerHTML = `
+    <div class="topbar">
+      <button class="btn-small" id="back">← Back</button>
+      <h1 style="margin:0">Today’s plan</h1>
+    </div>
+    <p class="muted">One thing at a time, from top to bottom.</p>
+    <ol class="plan-list">
+      ${items.map((it, i) => `<li>
+        <button class="plan-row ${it.done ? 'is-done' : ''} ${it === current ? 'is-now' : ''}" data-id="${esc(it.id)}">
+          <span class="plan-num">${it.done ? '✓' : i + 1}</span>
+          ${planVisual(it, 'plan-thumb')}
+          <span class="plan-text"><strong>${esc(it.title)}</strong>
+            <span class="muted">${it.done ? 'Done' : it === current ? (it.type === 'chore' ? 'Now — tap to start' : 'Now — tap when done') : ''}</span>
+          </span>
+        </button></li>`).join('')}
+    </ol>`;
+  document.getElementById('back').onclick = () => go('#/');
+  app.querySelector('.plan-list').addEventListener('click', (e) => {
+    const b = e.target.closest('.plan-row');
+    if (!b) return;
+    const it = items.find((x) => x.id === b.dataset.id);
+    if (it.type === 'chore') go(`#/chore/${it.choreId}`);
+    else { togglePlanActivity(it.id); renderPlan(); }
+  });
+}
+
+/* ---------- Weekly summary ---------- */
+function renderWeek() {
+  const days = [];
+  for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); days.push(d); }
+  const keys = days.map((d) => todayKey(d));
+  const week = state.history.filter((h) => keys.includes(h.date));
+  const perDay = keys.map((k) => week.filter((h) => h.date === k).length);
+  const perChore = state.chores.map((c) => ({ c, n: week.filter((h) => h.choreId === c.id).length }))
+    .filter((x) => x.n).sort((a, b) => b.n - a.n);
+  const total = week.length;
+  const daysActive = perDay.filter(Boolean).length;
+  const stars = (n) => n === 0 ? '<span class="muted">–</span>' : n <= 4 ? '⭐'.repeat(n) : `⭐×${n}`;
+  app.innerHTML = `
+    <div class="topbar">
+      <button class="btn-small" id="back">← Back</button>
+      <h1 style="margin:0">My week</h1>
+    </div>
+    <div class="panel week-hero">
+      <div class="week-total">${total}</div>
+      <div><strong>${total === 1 ? 'chore' : 'chores'} finished in the last 7 days</strong><br>
+        <span class="muted">${total === 0 ? 'Every chore you finish earns a star here.' : `You did chores on ${daysActive} ${daysActive === 1 ? 'day' : 'days'}. ${daysActive >= 5 ? 'Amazing!' : 'Keep going!'}`}</span></div>
+    </div>
+    <ul class="week-days">
+      ${days.map((d, i) => `<li class="${i === 6 ? 'is-today' : ''}">
+        <span class="wd-name">${i === 6 ? 'Today' : DAY_NAMES[d.getDay()]}</span>
+        <span class="wd-stars" aria-label="${perDay[i]} chores">${stars(perDay[i])}</span>
+      </li>`).join('')}
+    </ul>
+    ${perChore.length ? `<h2>What you did</h2>
+      <ul class="week-chores">${perChore.map(({ c, n }) => `<li><span aria-hidden="true">${esc(c.emoji)}</span> ${esc(c.title)}<span class="spacer"></span><strong>${n}×</strong></li>`).join('')}</ul>` : ''}`;
+  document.getElementById('back').onclick = () => go('#/');
 }
 
 function setupHold(btn, onDone) {
@@ -283,14 +442,20 @@ function videoHtml(url) {
 function renderFinish(chore) {
   // A caregiver preview returns to the editor and doesn't count as done.
   if (chore.id === PREVIEW_ID) { renderEditor(draft._for); return; }
-  state.completions[chore.id] = todayKey();
+  const today = todayKey();
+  state.completions[chore.id] = today;
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 60);
+  state.history = state.history.filter((h) => h.date >= todayKey(cutoff)); // keep ~2 months
+  state.history.push({ choreId: chore.id, date: today });
   save();
+  const [next] = nextPlanItems();
   app.innerHTML = `
     <div class="finish">
       <div class="star" aria-hidden="true">🌟</div>
       <h1>You did it!</h1>
       <p class="muted">You finished “${esc(chore.title)}” all by yourself.</p>
-      <button class="btn-primary btn-huge" id="home">Back to chores</button>
+      ${next ? `<p class="next-up">Next: ${esc(next.emoji)} <strong>${esc(next.title)}</strong></p>` : ''}
+      <button class="btn-primary btn-huge" id="home">${next ? 'Continue' : 'Back to chores'}</button>
     </div>`;
   document.getElementById('home').onclick = () => go('#/');
   speak(`You did it! You finished ${chore.title}.`, true);
@@ -329,6 +494,37 @@ function renderCaregiver() {
         </div>`).join('')}
     </div>
     <button class="btn-primary" id="add" style="width:100%">＋ Add a chore</button>
+
+    <h2>Daily plan (First / Then)</h2>
+    <p class="muted">The home screen shows what comes first and what comes next. Add chores and everyday activities in order. The plan starts fresh each day.</p>
+    <div id="plan-edit">
+      ${state.schedule.map((it, i) => {
+        const c = it.type === 'chore' ? findChore(it.choreId) : null;
+        if (it.type === 'chore' && !c) return '';
+        return `<div class="panel row">
+          <span class="plan-num">${i + 1}</span>
+          <span style="font-size:1.5rem" aria-hidden="true">${esc(c ? c.emoji : it.emoji)}</span>
+          <span><strong>${esc(c ? c.title : it.text)}</strong><br><span class="muted">${c ? 'Chore' : 'Activity'}</span></span>
+          <span class="spacer"></span>
+          <button class="btn-small" data-pact="up" data-i="${i}" aria-label="Move up" ${i === 0 ? 'disabled' : ''}>↑</button>
+          <button class="btn-small" data-pact="down" data-i="${i}" aria-label="Move down" ${i === state.schedule.length - 1 ? 'disabled' : ''}>↓</button>
+          <button class="btn-small btn-danger" data-pact="del" data-i="${i}" aria-label="Remove from plan">✕</button>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="panel">
+      <label for="plan-chore">Add a chore</label>
+      <div class="row">
+        <select id="plan-chore">${state.chores.map((c) => `<option value="${esc(c.id)}">${esc(c.emoji)} ${esc(c.title)}</option>`).join('')}</select>
+        <button id="plan-add-chore">Add</button>
+      </div>
+      <label for="plan-text">Add an activity (like “Eat breakfast” or “Brush teeth”)</label>
+      <div class="row">
+        <input type="text" id="plan-emoji" class="emoji-input" maxlength="4" value="⭐" aria-label="Activity icon" style="width:64px!important">
+        <input type="text" id="plan-text" placeholder="e.g. Brush teeth">
+        <button id="plan-add-act">Add</button>
+      </div>
+    </div>
 
     <h2>Reminders</h2>
     <div class="panel">
@@ -375,6 +571,29 @@ function renderCaregiver() {
     [state.chores[i], state.chores[j]] = [state.chores[j], state.chores[i]];
     save(); renderCaregiver();
   });
+
+  document.getElementById('plan-edit').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-pact]');
+    if (!b) return;
+    const i = Number(b.dataset.i);
+    if (b.dataset.pact === 'del') state.schedule.splice(i, 1);
+    else {
+      const j = b.dataset.pact === 'up' ? i - 1 : i + 1;
+      [state.schedule[i], state.schedule[j]] = [state.schedule[j], state.schedule[i]];
+    }
+    save(); renderCaregiver();
+  });
+  document.getElementById('plan-add-chore').onclick = () => {
+    const c = findChore(document.getElementById('plan-chore').value);
+    if (!c) return;
+    state.schedule.push(planChore(c)); save(); renderCaregiver();
+  };
+  document.getElementById('plan-add-act').onclick = () => {
+    const text = document.getElementById('plan-text').value.trim();
+    if (!text) { document.getElementById('plan-text').focus(); return; }
+    state.schedule.push(planActivity(document.getElementById('plan-emoji').value.trim() || '⭐', text));
+    save(); renderCaregiver();
+  };
 
   const status = document.getElementById('notif-status');
   const nbtn = document.getElementById('notif-btn');
@@ -566,6 +785,7 @@ function renderEditor(id) {
   if (del) del.onclick = () => {
     if (!confirm(`Delete “${d.title}”? This cannot be undone.`)) return;
     state.chores = state.chores.filter((c) => c.id !== d.id);
+    state.schedule = state.schedule.filter((it) => it.choreId !== d.id);
     delete state.completions[d.id];
     save(); draft = null; go('#/care');
   };

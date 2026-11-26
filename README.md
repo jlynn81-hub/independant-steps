@@ -39,7 +39,9 @@ Then open http://localhost:8000. To put it on a phone, host the folder anywhere 
 
 - **One step at a time.** The teen sees one large step with a picture, a progress bar and a big **Done** button, plus **Back** and **Read to me** (speech).
 - **Starter chores.** Laundry, washing dishes, making the bed and feeding a pet come pre-loaded, with real photos for 28 of the 29 steps. Grown-ups can swap any of them for a photo of their own home.
-- **Grown-up settings.** Press and hold the ⚙️ button for 1 second; an optional PIN adds a second lock. Grown-ups can add, edit, reorder and delete chores and steps, attach a photo or video link to any step, and try a chore before saving it.
+- **First / Then board.** The home screen shows what to do first (with a big Start button) and what comes next, from a daily plan of chores and everyday activities like "Eat breakfast". **Today's plan** shows the whole list with progress. The plan starts fresh each day.
+- **My week.** Stars for each day's finished chores over the last 7 days, plus a count per chore.
+- **Grown-up settings.** Press and hold the ⚙️ button for 1 second; an optional PIN adds a second lock. Grown-ups can set up the daily plan, add, edit, reorder and delete chores and steps, attach a photo or video link to any step, and try a chore before saving it.
 - **Reminders.** Each chore can have times and days. While the app is open, a banner and a notification appear. To get reminders when it's closed, **Add reminders to calendar** exports an `.ics` file for the phone's calendar.
 - **Private by default.** All data stays on the device. **Save backup file** / **Load backup file** move it between devices.
 
