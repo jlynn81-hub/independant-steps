@@ -19,7 +19,8 @@ function step(emoji, text) { return { id: uid(), emoji, text, image: '', video: 
 
 // Bundled photos for the starter chores (see CREDITS.md). Step number -> images/<set>-<n>.jpg
 const STARTER_PHOTOS = { Laundry: ['laundry', [1, 2, 3, 4, 5, 6, 7, 8, 9]], 'Wash the dishes': ['dishes', [1, 2, 3, 4, 5, 6, 7, 8, 9]],
-  'Make the bed': ['bed', [1, 2, 3, 4, 5]], 'Feed the pet': ['pet', [1, 3, 4, 5]] };
+  'Make the bed': ['bed', [1, 2, 3, 4, 5]], 'Feed the pet': ['pet', [1, 2, 3, 4, 5]] };
+const PHOTOS_VERSION = 2; // bump when starter photos are added
 const STARTER_IMAGE_FILES = Object.values(STARTER_PHOTOS).flatMap(([set, nums]) => nums.map((n) => `images/${set}-${n}.jpg`));
 function addStarterPhotos(chores) {
   for (const c of chores) {
@@ -91,7 +92,7 @@ function starterChores() {
 
 // Saved data from before the photos existed: give unedited starter steps their photo.
 function migratePhotos(s) {
-  if (s.photosAdded) return;
+  if (s.photosAdded >= PHOTOS_VERSION) return;
   const starters = starterChores();
   for (const c of s.chores) {
     const match = starters.find((x) => x.title === c.title);
@@ -101,13 +102,13 @@ function migratePhotos(s) {
       if (orig && orig.image && !st.image) st.image = orig.image;
     }
   }
-  s.photosAdded = true;
+  s.photosAdded = PHOTOS_VERSION;
 }
 
 function defaultState() {
   return {
     chores: starterChores(),
-    photosAdded: true,
+    photosAdded: PHOTOS_VERSION,
     settings: { readAloud: false, pin: '' },
     completions: {}, // choreId -> 'YYYY-MM-DD'
   };
@@ -123,7 +124,7 @@ function load() {
       if (s && Array.isArray(s.chores)) {
         s.settings = Object.assign({ readAloud: false, pin: '' }, s.settings);
         s.completions = s.completions || {};
-        if (!s.photosAdded) { migratePhotos(s); localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+        if (!(s.photosAdded >= PHOTOS_VERSION)) { migratePhotos(s); localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
         return s;
       }
     }

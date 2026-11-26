@@ -169,6 +169,13 @@ window.PHOTO_CREDITS = [
   "url": "https://pixabay.com/photos/animal-dog-bowl-bowl-food-water-949803/"
  },
  {
+  "file": "pet-2",
+  "source": "Pixabay",
+  "author": "kaboompics",
+  "license": "Pixabay Content License",
+  "url": "https://pixabay.com/photos/tap-black-faucet-kitchen-sink-791172/"
+ },
+ {
   "file": "pet-3",
   "source": "Pixabay",
   "author": "kalhh",

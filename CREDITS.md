@@ -31,6 +31,7 @@ Starter chore photos are stored in `images/`, resized to 800px.
 | `images/bed-4.jpg` | cat6719 | [Pixabay](https://pixabay.com/photos/hand-black-skin-child-663726/) | Pixabay Content License |
 | `images/bed-5.jpg` | MemoryCatcher | [Pixabay](https://pixabay.com/photos/pillows-design-modern-comfort-1834895/) | Pixabay Content License |
 | `images/pet-1.jpg` | Antranias | [Pixabay](https://pixabay.com/photos/animal-dog-bowl-bowl-food-water-949803/) | Pixabay Content License |
+| `images/pet-2.jpg` | kaboompics | [Pixabay](https://pixabay.com/photos/tap-black-faucet-kitchen-sink-791172/) | Pixabay Content License |
 | `images/pet-3.jpg` | kalhh | [Pixabay](https://pixabay.com/photos/food-bowl-fressnapf-dog-food-281978/) | Pixabay Content License |
 | `images/pet-4.jpg` | eminens | [Pixabay](https://pixabay.com/photos/dog-meal-food-bowl-dog-food-feed-2210717/) | Pixabay Content License |
 | `images/pet-5.jpg` | 584652 | [Pixabay](https://pixabay.com/photos/dog-drink-water-thirst-bang-race-1378087/) | Pixabay Content License |
