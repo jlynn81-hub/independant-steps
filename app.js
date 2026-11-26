@@ -16,8 +16,23 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
 
 /* ---------- Starter chores ---------- */
 function step(emoji, text) { return { id: uid(), emoji, text, image: '', video: '' }; }
+
+// Bundled photos for the starter chores (see CREDITS.md). Step number -> images/<set>-<n>.jpg
+const STARTER_PHOTOS = { Laundry: ['laundry', [1, 2, 3, 4, 5, 6, 7, 8, 9]], 'Wash the dishes': ['dishes', [1, 2, 3, 4, 5, 6, 7, 8, 9]],
+  'Make the bed': ['bed', [1, 2, 3, 4, 5]], 'Feed the pet': ['pet', [1, 3, 4, 5]] };
+const STARTER_IMAGE_FILES = Object.values(STARTER_PHOTOS).flatMap(([set, nums]) => nums.map((n) => `images/${set}-${n}.jpg`));
+function addStarterPhotos(chores) {
+  for (const c of chores) {
+    const photos = STARTER_PHOTOS[c.title];
+    if (!photos) continue;
+    const [set, nums] = photos;
+    c.steps.forEach((s, i) => { if (nums.includes(i + 1)) s.image = `images/${set}-${i + 1}.jpg`; });
+  }
+  return chores;
+}
+
 function starterChores() {
-  return [
+  return addStarterPhotos([
     {
       id: uid(), title: 'Laundry', emoji: '🧺',
       reminders: [{ id: uid(), time: '16:00', days: [6] }],
@@ -71,12 +86,28 @@ function starterChores() {
         step('📦', 'Close the food bag and put it away.'),
       ],
     },
-  ];
+  ]);
+}
+
+// Saved data from before the photos existed: give unedited starter steps their photo.
+function migratePhotos(s) {
+  if (s.photosAdded) return;
+  const starters = starterChores();
+  for (const c of s.chores) {
+    const match = starters.find((x) => x.title === c.title);
+    if (!match) continue;
+    for (const st of c.steps) {
+      const orig = match.steps.find((x) => x.text === st.text);
+      if (orig && orig.image && !st.image) st.image = orig.image;
+    }
+  }
+  s.photosAdded = true;
 }
 
 function defaultState() {
   return {
     chores: starterChores(),
+    photosAdded: true,
     settings: { readAloud: false, pin: '' },
     completions: {}, // choreId -> 'YYYY-MM-DD'
   };
@@ -92,6 +123,7 @@ function load() {
       if (s && Array.isArray(s.chores)) {
         s.settings = Object.assign({ readAloud: false, pin: '' }, s.settings);
         s.completions = s.completions || {};
+        if (!s.photosAdded) { migratePhotos(s); localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
         return s;
       }
     }
@@ -321,7 +353,15 @@ function renderCaregiver() {
       <button id="import">⬆ Load backup file</button>
       <button class="btn-danger" id="reset">Reset to starter chores</button>
       <input type="file" id="import-file" accept="application/json,.json" hidden>
-    </div>`;
+    </div>
+
+    <h2>Photo credits</h2>
+    <details class="panel">
+      <summary>Starter photos from Pixabay and Wikimedia Commons</summary>
+      <ul class="credits">
+        ${(window.PHOTO_CREDITS || []).map((c) => `<li><a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.file)}</a>: ${esc(c.author)}, ${esc(c.source)} (${esc(c.license)})</li>`).join('')}
+      </ul>
+    </details>`;
 
   document.getElementById('done').onclick = () => { caregiverUnlocked = false; go('#/'); };
   document.getElementById('add').onclick = () => go('#/edit/new');

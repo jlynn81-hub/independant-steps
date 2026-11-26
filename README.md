@@ -38,7 +38,7 @@ Then open http://localhost:8000. To put it on a phone, host the folder anywhere 
 ### What's included
 
 - **One step at a time.** The teen sees one large step with a picture, a progress bar and a big **Done** button, plus **Back** and **Read to me** (speech).
-- **Starter chores.** Laundry, washing dishes, making the bed and feeding a pet come pre-loaded.
+- **Starter chores.** Laundry, washing dishes, making the bed and feeding a pet come pre-loaded, with real photos for 27 of the 29 steps. Grown-ups can swap any of them for a photo of their own home.
 - **Grown-up settings.** Press and hold the ⚙️ button for 1 second; an optional PIN adds a second lock. Grown-ups can add, edit, reorder and delete chores and steps, attach a photo or video link to any step, and try a chore before saving it.
 - **Reminders.** Each chore can have times and days. While the app is open, a banner and a notification appear. To get reminders when it's closed, **Add reminders to calendar** exports an `.ics` file for the phone's calendar.
 - **Private by default.** All data stays on the device. **Save backup file** / **Load backup file** move it between devices.
@@ -50,5 +50,6 @@ Then open http://localhost:8000. To put it on a phone, host the folder anywhere 
 | `index.html` | Page shell |
 | `app.js` | All app logic (views, editor, reminders, storage) |
 | `styles.css` | Calm, high-contrast, large-target styling with dark mode |
-| `sw.js` | Offline caching and notification taps |
+| `sw.js` | Offline caching (including photos) and notification taps |
+| `images/`, `credits.js`, `CREDITS.md` | Starter chore photos and their credits |
 | `manifest.webmanifest`, `icon.svg` | Install-to-home-screen metadata |
