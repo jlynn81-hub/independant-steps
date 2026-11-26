@@ -25,11 +25,11 @@ Starter chore photos are stored in `images/`, resized to 800px.
 | `images/dishes-7.jpg` | eak_kkk | [Pixabay](https://pixabay.com/photos/plate-wash-dish-storage-1767422/) | Pixabay Content License |
 | `images/dishes-8.jpg` | FeeLoona | [Pixabay](https://pixabay.com/photos/wood-shelf-glasses-dishes-cover-3081795/) | Pixabay Content License |
 | `images/dishes-9.jpg` | melodiustenor | [Pixabay](https://pixabay.com/photos/red-hand-water-washing-cleaning-255110/) | Pixabay Content License |
-| `images/bed-1.jpg` | JayMantri | [Pixabay](https://pixabay.com/photos/pillows-sheets-bed-linen-820149/) | Pixabay Content License |
-| `images/bed-2.jpg` | LUM3N | [Pixabay](https://pixabay.com/photos/read-sunday-bedroom-book-sleep-3667768/) | Pixabay Content License |
-| `images/bed-3.jpg` | StuBaileyPhoto | [Pixabay](https://pixabay.com/photos/bedroom-interior-design-house-room-5772286/) | Pixabay Content License |
+| `images/bed-1.jpg` | MemoryCatcher | [Pixabay](https://pixabay.com/photos/bed-newton-issac-science-4817102/) | Pixabay Content License |
+| `images/bed-2.jpg` | 23555986 | [Pixabay](https://pixabay.com/photos/interior-design-bedroom-furniture-7132452/) | Pixabay Content License |
+| `images/bed-3.jpg` | 23555986 | [Pixabay](https://pixabay.com/photos/bedroom-apartment-house-home-8442903/) | Pixabay Content License |
 | `images/bed-4.jpg` | cat6719 | [Pixabay](https://pixabay.com/photos/hand-black-skin-child-663726/) | Pixabay Content License |
-| `images/bed-5.jpg` | MemoryCatcher | [Pixabay](https://pixabay.com/photos/pillows-design-modern-comfort-1834895/) | Pixabay Content License |
+| `images/bed-5.jpg` | RaniRamli | [Pixabay](https://pixabay.com/photos/interior-bedroom-lifestyle-3575815/) | Pixabay Content License |
 | `images/pet-1.jpg` | Antranias | [Pixabay](https://pixabay.com/photos/animal-dog-bowl-bowl-food-water-949803/) | Pixabay Content License |
 | `images/pet-2.jpg` | kaboompics | [Pixabay](https://pixabay.com/photos/tap-black-faucet-kitchen-sink-791172/) | Pixabay Content License |
 | `images/pet-3.jpg` | kalhh | [Pixabay](https://pixabay.com/photos/food-bowl-fressnapf-dog-food-281978/) | Pixabay Content License |

@@ -129,23 +129,23 @@ window.PHOTO_CREDITS = [
  {
   "file": "bed-1",
   "source": "Pixabay",
-  "author": "JayMantri",
+  "author": "MemoryCatcher",
   "license": "Pixabay Content License",
-  "url": "https://pixabay.com/photos/pillows-sheets-bed-linen-820149/"
+  "url": "https://pixabay.com/photos/bed-newton-issac-science-4817102/"
  },
  {
   "file": "bed-2",
   "source": "Pixabay",
-  "author": "LUM3N",
+  "author": "23555986",
   "license": "Pixabay Content License",
-  "url": "https://pixabay.com/photos/read-sunday-bedroom-book-sleep-3667768/"
+  "url": "https://pixabay.com/photos/interior-design-bedroom-furniture-7132452/"
  },
  {
   "file": "bed-3",
   "source": "Pixabay",
-  "author": "StuBaileyPhoto",
+  "author": "23555986",
   "license": "Pixabay Content License",
-  "url": "https://pixabay.com/photos/bedroom-interior-design-house-room-5772286/"
+  "url": "https://pixabay.com/photos/bedroom-apartment-house-home-8442903/"
  },
  {
   "file": "bed-4",
@@ -157,9 +157,9 @@ window.PHOTO_CREDITS = [
  {
   "file": "bed-5",
   "source": "Pixabay",
-  "author": "MemoryCatcher",
+  "author": "RaniRamli",
   "license": "Pixabay Content License",
-  "url": "https://pixabay.com/photos/pillows-design-modern-comfort-1834895/"
+  "url": "https://pixabay.com/photos/interior-bedroom-lifestyle-3575815/"
  },
  {
   "file": "pet-1",
