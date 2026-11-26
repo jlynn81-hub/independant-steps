@@ -1,0 +1,14 @@
+{
+  "name": "Independent Steps",
+  "short_name": "Steps",
+  "description": "Step-by-step visual chore guide for building independence.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f4ef",
+  "theme_color": "#2f6f6a",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
